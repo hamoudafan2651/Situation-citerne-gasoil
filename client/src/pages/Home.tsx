@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { DigitalClock } from '@/components/DigitalClock';
 import { DataEntryForm } from '@/components/DataEntryForm';
 import { DataDashboard } from '@/components/DataDashboard';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { AdvancedExportDialog } from '@/components/AdvancedExportDialog';
 import { Button } from '@/components/ui/button';
 import { LogOut, User as UserIcon, Truck, Fuel, ShieldCheck } from 'lucide-react';
 import {
@@ -17,6 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Home() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -38,9 +43,9 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xl font-bold uppercase tracking-tight leading-none">
-                نظام تنظيم <span className="text-primary">صهاريج الوقود</span>
+                {t('header.title')}
               </h1>
-              <p className="text-[10px] text-muted-foreground font-mono tracking-widest">TQ14 - DIRECTION GENERALE</p>
+              <p className="text-[10px] text-muted-foreground font-mono tracking-widest">{t('header.subtitle')}</p>
             </div>
           </div>
 
@@ -48,6 +53,8 @@ export default function Home() {
             <div className="hidden md:block">
               <DigitalClock />
             </div>
+            
+            <LanguageSwitcher />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -64,14 +71,14 @@ export default function Home() {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user?.name}</p>
                     <p className="text-xs leading-none text-muted-foreground font-mono">
-                      ID: {user?.jobCardNumber}
+                      {t('header.userId')}: {user?.jobCardNumber}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>تسجيل الخروج</span>
+                  <span>{t('header.logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -91,10 +98,10 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent flex items-center px-8">
             <div className="max-w-2xl">
               <h2 className="text-3xl font-bold uppercase mb-2 text-foreground">
-                لوحة التحكم الميدانية
+                {t('home.dashboardTitle')}
               </h2>
               <p className="text-muted-foreground max-w-md">
-                مرحباً بك في نظام إدارة وتتبع حركة صهاريج الوقود. قم بتسجيل البيانات بدقة ومتابعة المؤشرات لحظياً.
+                {t('home.dashboardDesc')}
               </p>
             </div>
           </div>
@@ -110,8 +117,14 @@ export default function Home() {
           <div className="flex items-center justify-between mb-6 border-b-2 border-border pb-2">
             <h3 className="text-2xl font-bold uppercase flex items-center gap-2">
               <span className="w-3 h-8 bg-primary inline-block"></span>
-              سجل العمليات والتحليلات
+              {t('home.recordsTitle')}
             </h3>
+            <Button
+              onClick={() => setExportDialogOpen(true)}
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-none h-10 px-6"
+            >
+              {t('dashboard.export')}
+            </Button>
           </div>
           <DataDashboard />
         </section>
@@ -121,19 +134,22 @@ export default function Home() {
       <footer className="bg-muted/30 border-t-2 border-border py-6 mt-8">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground font-mono">
           <div>
-            <p>SNIM - DIRECTION GENERALE</p>
-            <p>Surveillance Zouerate</p>
+            <p>{t('footer.organization')}</p>
+            <p>{t('footer.department')}</p>
           </div>
           <div className="text-center">
-            <p>Responsable surveillance</p>
-            <p className="font-bold text-foreground mt-1">Abdellahi NAVEE</p>
+            <p>{t('footer.responsible')}</p>
+            <p className="font-bold text-foreground mt-1">{t('footer.name')}</p>
           </div>
           <div className="text-right">
-            <p>System Version 1.0.0</p>
-            <p>&copy; 2026 All Rights Reserved</p>
+            <p>{t('footer.version')}</p>
+            <p>{t('footer.rights')}</p>
           </div>
         </div>
       </footer>
+
+      {/* Export Dialog */}
+      <AdvancedExportDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen} />
     </div>
   );
 }
