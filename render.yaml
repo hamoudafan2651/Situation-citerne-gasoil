@@ -4,6 +4,10 @@ services:
     env: static
     buildCommand: pnpm install && pnpm build
     staticPublishPath: ./dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
     routes:
       - path: /*
         destination: /index.html
