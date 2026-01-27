@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 
 export default function Login() {
   const { login, register } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -86,9 +88,34 @@ export default function Login() {
       </div>
 
       <div className="w-full max-w-md z-10 px-4">
+        {/* Language Switcher */}
+        <div className="absolute top-4 right-4 flex gap-2 z-20">
+          <Button
+            onClick={() => setLanguage('ar')}
+            variant={language === 'ar' ? 'default' : 'outline'}
+            className="rounded-none border-2 h-8 px-3 text-xs font-bold uppercase"
+          >
+            العربية
+          </Button>
+          <Button
+            onClick={() => setLanguage('fr')}
+            variant={language === 'fr' ? 'default' : 'outline'}
+            className="rounded-none border-2 h-8 px-3 text-xs font-bold uppercase"
+          >
+            Français
+          </Button>
+          <Button
+            onClick={() => setLanguage('en')}
+            variant={language === 'en' ? 'default' : 'outline'}
+            className="rounded-none border-2 h-8 px-3 text-xs font-bold uppercase"
+          >
+            English
+          </Button>
+        </div>
+
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary text-primary-foreground mb-4 shadow-[4px_4px_0px_0px_var(--color-secondary)] border-2 border-secondary">
-            <Fuel size={40} strokeWidth={1.5} />
+            <img src="/images/snim-logo.jpg" alt="SNIM Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase font-display">
             نظام تنظيم <span className="text-primary">صهاريج الوقود</span>

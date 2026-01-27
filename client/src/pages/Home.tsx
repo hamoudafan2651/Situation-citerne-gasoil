@@ -38,8 +38,8 @@ export default function Home() {
       <header className="bg-card border-b-2 border-border sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto py-3 px-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="bg-primary text-primary-foreground p-2 shadow-[2px_2px_0px_0px_var(--color-secondary)]">
-              <img src="/images/logo-icon.png" alt="Logo" className="w-8 h-8 object-contain brightness-0 invert" />
+            <div className="bg-primary text-primary-foreground p-1 shadow-[2px_2px_0px_0px_var(--color-secondary)] border border-secondary">
+              <img src="/images/snim-logo.jpg" alt="SNIM Logo" className="w-8 h-8 object-cover rounded-none" />
             </div>
             <div>
               <h1 className="text-xl font-bold uppercase tracking-tight leading-none">
