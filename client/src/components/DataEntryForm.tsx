@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { useData, TankerRecord } from '@/contexts/DataContext';
+import { useData } from '@/contexts/DataContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Save, Truck, Hash, Clock, FileText, Scale, MapPin } from 'lucide-react';
+import { Save, AlertCircle } from 'lucide-react';
 
 export const DataEntryForm: React.FC = () => {
   const { addRecord } = useData();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -30,15 +31,20 @@ export const DataEntryForm: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Validation
+      if (!formData.tankerNumber || !formData.entryTime || !formData.bcNumber || 
+          !formData.orderedQuantity || !formData.loadedQuantity || !formData.oldIndex || 
+          !formData.currentIndex || !formData.destination) {
+        toast.error(t('login.fillAllFields'));
+        setIsSubmitting(false);
+        return;
+      }
+
       await addRecord({
         serialNumber: formData.serialNumber,
         tankerNumber: formData.tankerNumber,
@@ -52,12 +58,11 @@ export const DataEntryForm: React.FC = () => {
         destination: formData.destination
       });
 
-      toast.success('تم حفظ السجل بنجاح');
+      toast.success(t('form.success'));
       
-      // Reset form but keep serial number incremented if possible
-      const nextSerial = String(Number(formData.serialNumber) + 1).padStart(2, '0');
+      // Reset form
       setFormData({
-        serialNumber: Number(nextSerial) <= 8 ? nextSerial : '01',
+        serialNumber: String(parseInt(formData.serialNumber) + 1).padStart(2, '0'),
         tankerNumber: '',
         entryTime: '',
         exitTime: '',
@@ -69,193 +74,177 @@ export const DataEntryForm: React.FC = () => {
         destination: ''
       });
     } catch (error) {
-      toast.error('حدث خطأ أثناء الحفظ');
+      toast.error(t('form.error'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="brutalist-card border-l-4 border-l-primary">
-      <CardHeader className="bg-muted/30 border-b-2 border-border pb-4">
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <FileText className="w-6 h-6 text-primary" />
-          تسجيل حركة صهريج جديد
-        </CardTitle>
+    <Card className="brutalist-card">
+      <CardHeader className="border-b-2 border-border">
+        <CardTitle className="text-xl font-bold uppercase">{t('form.title')}</CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Row 1 */}
+          {/* Alert */}
+          <div className="flex gap-3 p-4 bg-primary/10 border-l-4 border-l-primary rounded-none">
+            <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-foreground">
+              {t('form.title')} - {new Date().toLocaleDateString('ar-SA')}
+            </p>
+          </div>
+
+          {/* Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Serial Number */}
             <div className="space-y-2">
-              <Label htmlFor="serialNumber" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Hash className="w-3 h-3" /> N° التسلسلي
-              </Label>
-              <Select 
-                value={formData.serialNumber} 
-                onValueChange={(val) => handleSelectChange('serialNumber', val)}
-              >
-                <SelectTrigger className="brutalist-input font-mono">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {['01', '02', '03', '04', '05', '06', '07', '08'].map(num => (
-                    <SelectItem key={num} value={num}>{num}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-sm font-bold uppercase">{t('form.serialNumber')}</Label>
+              <Input
+                type="text"
+                name="serialNumber"
+                value={formData.serialNumber}
+                disabled
+                className="brutalist-input bg-muted"
+              />
             </div>
 
-            <div className="space-y-2 lg:col-span-3">
-              <Label htmlFor="tankerNumber" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Truck className="w-3 h-3" /> رقم الصهريج
-              </Label>
+            {/* Tanker Number */}
+            <div className="space-y-2">
+              <Label className="text-sm font-bold uppercase">{t('form.tankerNumber')}</Label>
               <Input
-                id="tankerNumber"
+                type="text"
                 name="tankerNumber"
                 value={formData.tankerNumber}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
-                placeholder="مثال: 1234-AB"
+                placeholder="TQ-001"
+                className="brutalist-input"
                 required
               />
             </div>
 
-            {/* Row 2 */}
+            {/* Entry Time */}
             <div className="space-y-2">
-              <Label htmlFor="entryTime" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Clock className="w-3 h-3" /> وقت الدخول
-              </Label>
+              <Label className="text-sm font-bold uppercase">{t('form.entryTime')}</Label>
               <Input
-                id="entryTime"
-                name="entryTime"
                 type="time"
+                name="entryTime"
                 value={formData.entryTime}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
+                className="brutalist-input"
                 required
               />
             </div>
 
+            {/* Exit Time */}
             <div className="space-y-2">
-              <Label htmlFor="exitTime" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Clock className="w-3 h-3" /> وقت الخروج
-              </Label>
+              <Label className="text-sm font-bold uppercase">{t('form.exitTime')}</Label>
               <Input
-                id="exitTime"
-                name="exitTime"
                 type="time"
+                name="exitTime"
                 value={formData.exitTime}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
+                placeholder={t('dashboard.exit')}
+                className="brutalist-input"
               />
             </div>
 
-            <div className="space-y-2 lg:col-span-2">
-              <Label htmlFor="bcNumber" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <FileText className="w-3 h-3" /> رقم BC
-              </Label>
+            {/* BC Number */}
+            <div className="space-y-2">
+              <Label className="text-sm font-bold uppercase">{t('form.bcNumber')}</Label>
               <Input
-                id="bcNumber"
+                type="text"
                 name="bcNumber"
                 value={formData.bcNumber}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
-                placeholder="BC-2026-..."
+                placeholder="BC-2026-001"
+                className="brutalist-input"
                 required
               />
             </div>
 
-            {/* Row 3 */}
+            {/* Ordered Quantity */}
             <div className="space-y-2">
-              <Label htmlFor="orderedQuantity" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Scale className="w-3 h-3" /> الكمية المطلوبة
-              </Label>
+              <Label className="text-sm font-bold uppercase">{t('form.orderedQuantity')}</Label>
               <Input
-                id="orderedQuantity"
-                name="orderedQuantity"
                 type="number"
+                name="orderedQuantity"
                 value={formData.orderedQuantity}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
                 placeholder="0"
+                className="brutalist-input"
                 required
               />
             </div>
 
+            {/* Loaded Quantity */}
             <div className="space-y-2">
-              <Label htmlFor="loadedQuantity" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Scale className="w-3 h-3" /> الكمية المحملة
-              </Label>
+              <Label className="text-sm font-bold uppercase">{t('form.loadedQuantity')}</Label>
               <Input
-                id="loadedQuantity"
-                name="loadedQuantity"
                 type="number"
+                name="loadedQuantity"
                 value={formData.loadedQuantity}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
                 placeholder="0"
+                className="brutalist-input"
                 required
               />
             </div>
 
+            {/* Old Index */}
             <div className="space-y-2">
-              <Label htmlFor="oldIndex" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Hash className="w-3 h-3" /> المؤشر القديم
-              </Label>
+              <Label className="text-sm font-bold uppercase">{t('form.oldIndex')}</Label>
               <Input
-                id="oldIndex"
-                name="oldIndex"
                 type="number"
+                name="oldIndex"
                 value={formData.oldIndex}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
                 placeholder="0"
+                className="brutalist-input"
                 required
               />
             </div>
 
+            {/* Current Index */}
             <div className="space-y-2">
-              <Label htmlFor="currentIndex" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <Hash className="w-3 h-3" /> المؤشر الحالي
-              </Label>
+              <Label className="text-sm font-bold uppercase">{t('form.currentIndex')}</Label>
               <Input
-                id="currentIndex"
-                name="currentIndex"
                 type="number"
+                name="currentIndex"
                 value={formData.currentIndex}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
                 placeholder="0"
+                className="brutalist-input"
                 required
               />
             </div>
 
-            {/* Row 4 */}
-            <div className="space-y-2 lg:col-span-4">
-              <Label htmlFor="destination" className="flex items-center gap-1 text-xs uppercase font-bold text-muted-foreground">
-                <MapPin className="w-3 h-3" /> الوجهة
-              </Label>
+            {/* Destination */}
+            <div className="space-y-2 lg:col-span-3">
+              <Label className="text-sm font-bold uppercase">{t('form.destination')}</Label>
               <Input
-                id="destination"
+                type="text"
                 name="destination"
                 value={formData.destination}
                 onChange={handleChange}
-                className="brutalist-input font-mono"
-                placeholder="الموقع / المحطة"
+                placeholder={t('form.destination')}
+                className="brutalist-input"
                 required
               />
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full h-12 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-none border-2 border-transparent hover:border-secondary transition-all flex items-center justify-center gap-2"
-            disabled={isSubmitting}
-          >
-            <Save className="w-5 h-5" />
-            {isSubmitting ? 'جاري الحفظ...' : 'حفظ السجل'}
-          </Button>
+          {/* Submit Button */}
+          <div className="flex gap-2 pt-4 border-t-2 border-border">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-none h-10 px-8 flex items-center gap-2 font-bold uppercase"
+            >
+              <Save className="w-4 h-4" />
+              {isSubmitting ? t('form.saving') : t('form.save')}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

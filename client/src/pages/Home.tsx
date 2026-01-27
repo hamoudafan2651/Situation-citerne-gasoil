@@ -7,7 +7,7 @@ import { DataDashboard } from '@/components/DataDashboard';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { AdvancedExportDialog } from '@/components/AdvancedExportDialog';
 import { Button } from '@/components/ui/button';
-import { LogOut, User as UserIcon, Truck, Fuel, ShieldCheck } from 'lucide-react';
+import { LogOut, User as UserIcon, Truck, Fuel, ShieldCheck, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,9 +121,10 @@ export default function Home() {
             </h3>
             <Button
               onClick={() => setExportDialogOpen(true)}
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-none h-10 px-6"
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-none h-10 px-6 flex items-center gap-2 font-bold uppercase"
             >
-              {t('dashboard.export')}
+              <Download className="w-4 h-4" />
+              {t('export.title')}
             </Button>
           </div>
           <DataDashboard />

@@ -1,15 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useData, TankerRecord } from '@/contexts/DataContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Download, Search, Filter, Trash2, Edit } from 'lucide-react';
+import { Download, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const DataDashboard: React.FC = () => {
-  const { records, deleteRecord, exportData } = useData();
+  const { records, deleteRecord } = useData();
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
 
@@ -27,7 +29,6 @@ export const DataDashboard: React.FC = () => {
   }, [records, searchTerm, dateFilter]);
 
   const chartData = useMemo(() => {
-    // Group by hour for the selected date
     const hourlyData: Record<string, { loaded: number, ordered: number }> = {};
     
     filteredRecords.forEach(record => {
@@ -51,9 +52,9 @@ export const DataDashboard: React.FC = () => {
   const totalOrdered = useMemo(() => filteredRecords.reduce((sum, r) => sum + r.orderedQuantity, 0), [filteredRecords]);
 
   const handleDelete = async (id: string) => {
-    if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
+    if (confirm(t('dashboard.deleteConfirm'))) {
       await deleteRecord(id);
-      toast.success('تم حذف السجل');
+      toast.success(t('dashboard.deleted'));
     }
   };
 
@@ -63,7 +64,7 @@ export const DataDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="brutalist-card border-l-4 border-l-primary">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm uppercase text-muted-foreground">إجمالي الكمية المحملة</CardTitle>
+            <CardTitle className="text-sm uppercase text-muted-foreground">{t('dashboard.totalLoaded')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold font-mono">{totalLoaded.toLocaleString()} L</div>
@@ -71,7 +72,7 @@ export const DataDashboard: React.FC = () => {
         </Card>
         <Card className="brutalist-card border-l-4 border-l-secondary">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm uppercase text-muted-foreground">إجمالي الكمية المطلوبة</CardTitle>
+            <CardTitle className="text-sm uppercase text-muted-foreground">{t('dashboard.totalOrdered')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold font-mono">{totalOrdered.toLocaleString()} L</div>
@@ -79,7 +80,7 @@ export const DataDashboard: React.FC = () => {
         </Card>
         <Card className="brutalist-card border-l-4 border-l-accent">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm uppercase text-muted-foreground">عدد الصهاريج</CardTitle>
+            <CardTitle className="text-sm uppercase text-muted-foreground">{t('dashboard.tankerCount')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold font-mono">{filteredRecords.length}</div>
@@ -88,138 +89,146 @@ export const DataDashboard: React.FC = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="brutalist-card">
           <CardHeader>
-            <CardTitle>تحليل الكميات بالساعة</CardTitle>
+            <CardTitle className="text-lg font-bold uppercase">{t('dashboard.quantityAnalysis')}</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="hour" stroke="var(--foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '0px' }}
-                  itemStyle={{ color: 'var(--foreground)' }}
-                />
-                <Bar dataKey="loadedQuantity" name="الكمية المحملة" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="orderedQuantity" name="الكمية المطلوبة" fill="var(--secondary)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <CardContent>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="hour" stroke="var(--color-muted-foreground)" />
+                  <YAxis stroke="var(--color-muted-foreground)" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--color-card)', border: '2px solid var(--color-border)' }}
+                    formatter={(value: any) => value.toLocaleString()}
+                  />
+                  <Bar dataKey="loaded" fill="var(--color-primary)" name={t('dashboard.loaded')} />
+                  <Bar dataKey="ordered" fill="var(--color-secondary)" name={t('dashboard.ordered')} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                {t('dashboard.noRecords')}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card className="brutalist-card">
           <CardHeader>
-            <CardTitle>اتجاه التحميل</CardTitle>
+            <CardTitle className="text-lg font-bold uppercase">{t('dashboard.loadingTrend')}</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="hour" stroke="var(--foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '0px' }}
-                  itemStyle={{ color: 'var(--foreground)' }}
-                />
-                <Line type="monotone" dataKey="loadedQuantity" stroke="var(--primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--primary)' }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <CardContent>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="hour" stroke="var(--color-muted-foreground)" />
+                  <YAxis stroke="var(--color-muted-foreground)" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--color-card)', border: '2px solid var(--color-border)' }}
+                    formatter={(value: any) => value.toLocaleString()}
+                  />
+                  <Line type="monotone" dataKey="loaded" stroke="var(--color-primary)" strokeWidth={2} name={t('dashboard.loaded')} />
+                  <Line type="monotone" dataKey="ordered" stroke="var(--color-secondary)" strokeWidth={2} name={t('dashboard.ordered')} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                {t('dashboard.noRecords')}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col md:flex-row gap-4 items-end justify-between bg-muted/20 p-4 border-2 border-border">
-        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-muted-foreground">بحث</label>
+      {/* Filters */}
+      <Card className="brutalist-card">
+        <CardHeader>
+          <CardTitle className="text-lg font-bold uppercase">{t('dashboard.search')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
-              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="رقم الصهريج، الوجهة..." 
+              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={t('dashboard.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="brutalist-input pr-9 w-full md:w-[250px]"
+                className="pl-10 brutalist-input"
               />
             </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-muted-foreground">التاريخ</label>
-            <Input 
-              type="date" 
+            <Input
+              type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="brutalist-input w-full md:w-[180px]"
+              className="brutalist-input"
             />
           </div>
-        </div>
-        <Button 
-          onClick={() => exportData(dateFilter, dateFilter)}
-          className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-none h-10 px-6 flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          تصدير البيانات
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Data Table */}
+      {/* Records Table */}
       <Card className="brutalist-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">N°</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">رقم الصهريج</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">وقت الدخول</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">وقت الخروج</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">رقم BC</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">الكمية المطلوبة</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">الكمية المحملة</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">المؤشر القديم</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">المؤشر الحالي</TableHead>
-                <TableHead className="text-center font-bold text-foreground border-r border-border">الوجهة</TableHead>
-                <TableHead className="text-center font-bold text-foreground">إجراءات</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRecords.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                    لا توجد سجلات لهذا التاريخ
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredRecords.map((record) => (
-                  <TableRow key={record.id} className="hover:bg-muted/20 transition-colors">
-                    <TableCell className="text-center font-mono border-r border-border">{record.serialNumber}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border">{record.tankerNumber}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border">{record.entryTime}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border">{record.exitTime || '-'}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border">{record.bcNumber}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border">{record.orderedQuantity}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border font-bold text-primary">{record.loadedQuantity}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border">{record.oldIndex}</TableCell>
-                    <TableCell className="text-center font-mono border-r border-border">{record.currentIndex}</TableCell>
-                    <TableCell className="text-center border-r border-border">{record.destination}</TableCell>
-                    <TableCell className="text-center">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDelete(record.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold uppercase">{t('dashboard.tankerNum')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredRecords.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b-2 border-border hover:bg-transparent">
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.serialNum')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.tankerNum')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.entry')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.exit')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.bcNum')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.ordered')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.loaded')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.oldIdx')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.currentIdx')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.destination')}</TableHead>
+                    <TableHead className="text-center font-bold uppercase text-xs">{t('dashboard.actions')}</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredRecords.map((record, index) => (
+                    <TableRow key={record.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <TableCell className="text-center text-sm font-mono">{index + 1}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.tankerNumber}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.entryTime}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.exitTime || '-'}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.bcNumber}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.orderedQuantity}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.loadedQuantity}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.oldIndex}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{record.currentIndex}</TableCell>
+                      <TableCell className="text-center text-sm">{record.destination}</TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(record.id)}
+                          className="text-destructive hover:bg-destructive/10 rounded-none"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              {t('dashboard.noRecords')}
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );

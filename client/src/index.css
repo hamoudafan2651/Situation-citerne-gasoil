@@ -196,4 +196,54 @@
   .brutalist-input {
     @apply border-2 border-input bg-background rounded-none focus:ring-0 focus:border-primary transition-colors;
   }
+  
+  /* Enhanced Brutalist Styles */
+  .brutalist-card:hover {
+    @apply shadow-[6px_6px_0px_0px_var(--color-border)] transition-all duration-200;
+  }
+  
+  /* Table Enhancements */
+  table {
+    @apply w-full border-collapse;
+  }
+  
+  thead tr {
+    @apply bg-primary/5 border-b-2 border-border;
+  }
+  
+  tbody tr {
+    @apply border-b border-border transition-colors hover:bg-muted/30;
+  }
+  
+  /* Dialog Improvements */
+  [role="dialog"] {
+    @apply rounded-none;
+  }
+  
+  /* Smooth Transitions */
+  * {
+    @apply transition-colors duration-150;
+  }
+  
+  button, [role="button"] {
+    @apply transition-all duration-200;
+  }
+  
+  /* Focus States */
+  input:focus, textarea:focus, select:focus {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+  
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/50 hover:bg-primary;
+  }
 }
