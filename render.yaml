@@ -1,0 +1,9 @@
+services:
+  - type: static
+    name: situation-citerne-gasoil
+    env: static
+    buildCommand: pnpm install && pnpm build
+    staticPublishPath: ./dist
+    routes:
+      - path: /*
+        destination: /index.html
