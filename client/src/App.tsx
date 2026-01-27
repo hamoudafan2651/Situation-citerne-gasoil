@@ -1,17 +1,41 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { DataProvider } from "./contexts/DataContext";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
+import { useEffect } from "react";
 
+// Protected Route Component
+const ProtectedRoute = ({ component: Component }: { component: React.ComponentType }) => {
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLocation("/login");
+    }
+  }, [isAuthenticated, setLocation]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return <Component />;
+};
 
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
+      <Route path="/login" component={Login} />
+      <Route path="/">
+        <ProtectedRoute component={Home} />
+      </Route>
+      <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
@@ -26,14 +50,15 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+      <ThemeProvider defaultTheme="light">
+        <AuthProvider>
+          <DataProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </DataProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

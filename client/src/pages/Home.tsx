@@ -1,25 +1,139 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { DigitalClock } from '@/components/DigitalClock';
+import { DataEntryForm } from '@/components/DataEntryForm';
+import { DataDashboard } from '@/components/DataDashboard';
+import { Button } from '@/components/ui/button';
+import { LogOut, User as UserIcon, Truck, Fuel, ShieldCheck } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'truck': return <Truck className="h-5 w-5" />;
+      case 'fuel': return <Fuel className="h-5 w-5" />;
+      case 'shield': return <ShieldCheck className="h-5 w-5" />;
+      default: return <UserIcon className="h-5 w-5" />;
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="bg-card border-b-2 border-border sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto py-3 px-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary text-primary-foreground p-2 shadow-[2px_2px_0px_0px_var(--color-secondary)]">
+              <img src="/images/logo-icon.png" alt="Logo" className="w-8 h-8 object-contain brightness-0 invert" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold uppercase tracking-tight leading-none">
+                نظام تنظيم <span className="text-primary">صهاريج الوقود</span>
+              </h1>
+              <p className="text-[10px] text-muted-foreground font-mono tracking-widest">TQ14 - DIRECTION GENERALE</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="hidden md:block">
+              <DigitalClock />
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-primary p-0 hover:bg-primary/10">
+                  <Avatar className="h-full w-full rounded-full">
+                    <AvatarFallback className="bg-transparent text-primary font-bold">
+                      {getIcon(user?.icon || 'user')}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 rounded-none border-2 border-border shadow-[4px_4px_0px_0px_var(--color-border)]" align="end">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground font-mono">
+                      ID: {user?.jobCardNumber}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>تسجيل الخروج</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto py-8 px-4 space-y-8">
+        {/* Hero Section */}
+        <div className="relative rounded-none overflow-hidden h-48 border-2 border-border group">
+          <img 
+            src="/images/hero-background.jpg" 
+            alt="Dashboard Hero" 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent flex items-center px-8">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl font-bold uppercase mb-2 text-foreground">
+                لوحة التحكم الميدانية
+              </h2>
+              <p className="text-muted-foreground max-w-md">
+                مرحباً بك في نظام إدارة وتتبع حركة صهاريج الوقود. قم بتسجيل البيانات بدقة ومتابعة المؤشرات لحظياً.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Entry Section */}
+        <section>
+          <DataEntryForm />
+        </section>
+
+        {/* Dashboard Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6 border-b-2 border-border pb-2">
+            <h3 className="text-2xl font-bold uppercase flex items-center gap-2">
+              <span className="w-3 h-8 bg-primary inline-block"></span>
+              سجل العمليات والتحليلات
+            </h3>
+          </div>
+          <DataDashboard />
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-muted/30 border-t-2 border-border py-6 mt-8">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground font-mono">
+          <div>
+            <p>SNIM - DIRECTION GENERALE</p>
+            <p>Surveillance Zouerate</p>
+          </div>
+          <div className="text-center">
+            <p>Responsable surveillance</p>
+            <p className="font-bold text-foreground mt-1">Abdellahi NAVEE</p>
+          </div>
+          <div className="text-right">
+            <p>System Version 1.0.0</p>
+            <p>&copy; 2026 All Rights Reserved</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
