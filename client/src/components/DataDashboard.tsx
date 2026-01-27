@@ -178,7 +178,7 @@ export const DataDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           {filteredRecords.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="table-container">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b-2 border-border hover:bg-transparent">

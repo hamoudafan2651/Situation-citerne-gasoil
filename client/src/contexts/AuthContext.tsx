@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load users and current session from localStorage on mount
   useEffect(() => {
-    const storedUsers = localStorage.getItem('scg_users');
+    const storedUsers = localStorage.getItem('scg_users_list');
     if (storedUsers) {
       setUsers(JSON.parse(storedUsers));
     }
@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const updatedUsers = [...users, publicUser];
     setUsers(updatedUsers);
-    localStorage.setItem('scg_users', JSON.stringify(updatedUsers));
+    localStorage.setItem('scg_users_list', JSON.stringify(updatedUsers));
     
     // Auto login after register
     setUser(publicUser);

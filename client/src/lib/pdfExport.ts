@@ -87,9 +87,10 @@ export const exportToPDF = ({
     ]);
 
     // Add table using autoTable
-    const autoTablePlugin = (doc as any).autoTable || require('jspdf-autotable');
-    if (typeof autoTablePlugin === 'function') {
-      autoTablePlugin.call(doc, {
+    // Note: In modern jspdf-autotable, it's often available directly on the doc instance
+    const autoTable = (doc as any).autoTable;
+    if (typeof autoTable === 'function') {
+      autoTable.call(doc, {
         head: [headers],
         body: tableData,
         startY: margin + 36,

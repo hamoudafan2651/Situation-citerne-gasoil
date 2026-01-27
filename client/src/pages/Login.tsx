@@ -13,6 +13,11 @@ import { toast } from 'sonner';
 export default function Login() {
   const { login, register } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  
+  React.useEffect(() => {
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [language]);
   const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -147,7 +152,7 @@ export default function Login() {
                         type="text" 
                         placeholder="0000" 
                         maxLength={4}
-                        className="brutalist-input font-mono text-lg tracking-widest text-center"
+                        className="brutalist-input font-mono text-lg tracking-widest text-center [direction:ltr]"
                         value={loginJobCard}
                         onChange={(e) => setLoginJobCard(e.target.value.replace(/\D/g, ''))}
                         required
@@ -160,7 +165,7 @@ export default function Login() {
                     <Input 
                       id="passcode" 
                       type="password" 
-                      className="brutalist-input font-mono text-lg tracking-widest text-center"
+                      className="brutalist-input font-mono text-lg tracking-widest text-center [direction:ltr]"
                       value={loginPasscode}
                       onChange={(e) => setLoginPasscode(e.target.value)}
                       required

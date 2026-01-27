@@ -46,6 +46,10 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+[dir="rtl"] {
+  --font-sans: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
 :root {
   /* SNIM Corporate Palette */
   /* Primary: SNIM Blue (#1B4D8C) */
@@ -203,8 +207,12 @@
   }
   
   /* Table Enhancements */
+  .table-container {
+    @apply w-full overflow-x-auto;
+  }
+  
   table {
-    @apply w-full border-collapse;
+    @apply w-full border-collapse min-w-[800px];
   }
   
   thead tr {
@@ -232,6 +240,16 @@
   /* Focus States */
   input:focus, textarea:focus, select:focus {
     @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+
+  /* Fix for Arabic text alignment in inputs */
+  [dir="rtl"] input, [dir="rtl"] textarea {
+    text-align: right;
+  }
+  
+  [dir="rtl"] .font-mono {
+    direction: ltr;
+    unicode-bidi: embed;
   }
   
   /* Scrollbar Styling */
