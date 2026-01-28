@@ -88,62 +88,7 @@ export const DataDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="brutalist-card">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold uppercase">{t('dashboard.quantityAnalysis')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="hour" stroke="var(--color-muted-foreground)" />
-                  <YAxis stroke="var(--color-muted-foreground)" />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--color-card)', border: '2px solid var(--color-border)' }}
-                    formatter={(value: any) => value.toLocaleString()}
-                  />
-                  <Bar dataKey="loaded" fill="var(--color-primary)" name={t('dashboard.loaded')} />
-                  <Bar dataKey="ordered" fill="var(--color-secondary)" name={t('dashboard.ordered')} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                {t('dashboard.noRecords')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        <Card className="brutalist-card">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold uppercase">{t('dashboard.loadingTrend')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="hour" stroke="var(--color-muted-foreground)" />
-                  <YAxis stroke="var(--color-muted-foreground)" />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--color-card)', border: '2px solid var(--color-border)' }}
-                    formatter={(value: any) => value.toLocaleString()}
-                  />
-                  <Line type="monotone" dataKey="loaded" stroke="var(--color-primary)" strokeWidth={2} name={t('dashboard.loaded')} />
-                  <Line type="monotone" dataKey="ordered" stroke="var(--color-secondary)" strokeWidth={2} name={t('dashboard.ordered')} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                {t('dashboard.noRecords')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Filters */}
       <Card className="brutalist-card">

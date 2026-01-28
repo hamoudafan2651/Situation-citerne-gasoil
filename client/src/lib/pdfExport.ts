@@ -39,7 +39,8 @@ export const exportToPDF = ({
     const fixRTL = (text: string) => {
       if (language !== 'ar') return text;
       // This is a very basic fix for Arabic text in jsPDF which doesn't support RTL natively well
-      return text.split(' ').reverse().join(' ');
+      // We reverse the characters for each word to handle the RTL display in jsPDF
+      return text.split(' ').map(word => word.split('').reverse().join('')).reverse().join(' ');
     };
 
     // Title
