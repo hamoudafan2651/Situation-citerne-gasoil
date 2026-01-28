@@ -1,0 +1,21 @@
+{
+  "name": "نظام تنظيم صهاريج الوقود",
+  "short_name": "وقود SNIM",
+  "description": "نظام تنظيم صهاريج الوقود - TQ14 DIRECTION GENERALE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1b4d8c",
+  "icons": [
+    {
+      "src": "/images/snim-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/images/snim-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

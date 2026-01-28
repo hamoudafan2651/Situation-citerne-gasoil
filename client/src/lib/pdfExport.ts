@@ -138,8 +138,11 @@ export const exportToPDF = ({
       { align: 'right' }
     );
 
-    // Save PDF
-    const fileName = `situation_citerne_${new Date().toISOString().split('T')[0]}_${language}.pdf`;
+    // Save PDF with precise date and time
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.getHours().toString().padStart(2, '0') + '-' + now.getMinutes().toString().padStart(2, '0');
+    const fileName = `situation_citerne_${dateStr}_${timeStr}_${language}.pdf`;
     doc.save(fileName);
 
     return true;
