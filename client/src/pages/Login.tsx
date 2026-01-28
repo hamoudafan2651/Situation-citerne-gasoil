@@ -34,7 +34,7 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loginJobCard.length !== 4) {
-      toast.error('رقم بطاقة الوظيفة يجب أن يتكون من 4 أرقام');
+      toast.error(t('login.jobCard'));
       return;
     }
     
@@ -42,13 +42,13 @@ export default function Login() {
     try {
       const success = await login(loginJobCard, loginPasscode);
       if (success) {
-        toast.success('تم تسجيل الدخول بنجاح');
+        toast.success(t('form.success'));
         setLocation('/');
       } else {
-        toast.error('بيانات الدخول غير صحيحة');
+        toast.error(t('login.invalidCredentials'));
       }
     } catch (error) {
-      toast.error('حدث خطأ أثناء تسجيل الدخول');
+      toast.error(t('form.error'));
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +57,7 @@ export default function Login() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (regJobCard.length !== 4) {
-      toast.error('رقم بطاقة الوظيفة يجب أن يتكون من 4 أرقام');
+      toast.error(t('login.jobCard'));
       return;
     }
     
@@ -65,13 +65,13 @@ export default function Login() {
     try {
       const success = await register(regJobCard, regPasscode, regName, regIcon);
       if (success) {
-        toast.success('تم إنشاء الحساب بنجاح');
+        toast.success(t('form.success'));
         setLocation('/');
       } else {
-        toast.error('المستخدم موجود بالفعل');
+        toast.error(t('login.userExists'));
       }
     } catch (error) {
-      toast.error('حدث خطأ أثناء التسجيل');
+      toast.error(t('form.error'));
     } finally {
       setIsLoading(false);
     }
@@ -123,29 +123,29 @@ export default function Login() {
             <img src="/images/snim-logo.jpg" alt="SNIM Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase font-display">
-            نظام تنظيم <span className="text-primary">صهاريج الوقود</span>
+            {t('login.title').split(' ').slice(0, 2).join(' ')} <span className="text-primary">{t('login.title').split(' ').slice(2).join(' ')}</span>
           </h1>
           <p className="text-muted-foreground mt-2 font-mono text-sm">
-            TQ14 - DIRECTION GENERALE
+            {t('login.subtitle')}
           </p>
         </div>
 
         <Card className="brutalist-card border-2 border-secondary/20 bg-card/95 backdrop-blur-sm">
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 rounded-none bg-muted/50 p-1">
-              <TabsTrigger value="login" className="rounded-none data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-none font-bold uppercase">تسجيل الدخول</TabsTrigger>
-              <TabsTrigger value="register" className="rounded-none data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-none font-bold uppercase">حساب جديد</TabsTrigger>
+              <TabsTrigger value="login" className="rounded-none data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-none font-bold uppercase">{t('login.existingAccount')}</TabsTrigger>
+              <TabsTrigger value="register" className="rounded-none data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-none font-bold uppercase">{t('login.newAccount')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
               <form onSubmit={handleLogin}>
                 <CardHeader>
-                  <CardTitle className="text-xl">مرحباً بعودتك</CardTitle>
-                  <CardDescription>أدخل رقم بطاقة الوظيفة ورمز المرور للمتابعة</CardDescription>
+                  <CardTitle className="text-xl">{t('login.welcome')}</CardTitle>
+                  <CardDescription>{language === 'ar' ? 'أدخل رقم بطاقة الوظيفة ورمز المرور للمتابعة' : language === 'fr' ? 'Entrez votre numéro de carte et mot de passe' : 'Enter your job card number and passcode'}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="jobCard" className="font-bold uppercase text-xs tracking-wider">رقم بطاقة الوظيفة (4 أرقام)</Label>
+                    <Label htmlFor="jobCard" className="font-bold uppercase text-xs tracking-wider">{t('login.jobCard')}</Label>
                     <div className="relative">
                       <Input 
                         id="jobCard" 
@@ -161,7 +161,7 @@ export default function Login() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="passcode" className="font-bold uppercase text-xs tracking-wider">رمز المرور</Label>
+                    <Label htmlFor="passcode" className="font-bold uppercase text-xs tracking-wider">{t('login.password')}</Label>
                     <Input 
                       id="passcode" 
                       type="password" 
@@ -174,7 +174,7 @@ export default function Login() {
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full h-12 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-none border-2 border-transparent hover:border-secondary transition-all" disabled={isLoading}>
-                    {isLoading ? 'جاري التحقق...' : 'تسجيل الدخول'}
+                    {isLoading ? (language === 'ar' ? 'جاري التحقق...' : 'Vérification...') : t('login.login')}
                   </Button>
                 </CardFooter>
               </form>
@@ -183,16 +183,16 @@ export default function Login() {
             <TabsContent value="register">
               <form onSubmit={handleRegister}>
                 <CardHeader>
-                  <CardTitle className="text-xl">إنشاء حساب جديد</CardTitle>
-                  <CardDescription>سجل بياناتك للوصول إلى النظام</CardDescription>
+                  <CardTitle className="text-xl">{t('login.register')}</CardTitle>
+                  <CardDescription>{language === 'ar' ? 'سجل بياناتك للوصول إلى النظام' : language === 'fr' ? 'Enregistrez vos données pour accéder au système' : 'Register your data to access the system'}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="regName" className="font-bold uppercase text-xs tracking-wider">الاسم الكامل</Label>
+                    <Label htmlFor="regName" className="font-bold uppercase text-xs tracking-wider">{t('login.name')}</Label>
                     <Input 
                       id="regName" 
                       type="text" 
-                      placeholder="الاسم الكامل" 
+                      placeholder={t('login.name')} 
                       className="brutalist-input"
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
@@ -201,7 +201,7 @@ export default function Login() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="regJobCard" className="font-bold uppercase text-xs tracking-wider">رقم الوظيفة</Label>
+                      <Label htmlFor="regJobCard" className="font-bold uppercase text-xs tracking-wider">{t('login.jobCard').split(' ')[0]}</Label>
                       <Input 
                         id="regJobCard" 
                         type="text" 
@@ -214,7 +214,7 @@ export default function Login() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="regPasscode" className="font-bold uppercase text-xs tracking-wider">رمز المرور</Label>
+                      <Label htmlFor="regPasscode" className="font-bold uppercase text-xs tracking-wider">{t('login.password')}</Label>
                       <Input 
                         id="regPasscode" 
                         type="password" 
@@ -227,7 +227,7 @@ export default function Login() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="font-bold uppercase text-xs tracking-wider">اختر أيقونة</Label>
+                    <Label className="font-bold uppercase text-xs tracking-wider">{t('login.icon')}</Label>
                     <div className="grid grid-cols-4 gap-2">
                       {['truck', 'fuel', 'user', 'shield'].map((icon) => (
                         <div 
@@ -250,7 +250,7 @@ export default function Login() {
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-none border-2 border-transparent hover:border-primary transition-all" disabled={isLoading}>
-                    {isLoading ? 'جاري التسجيل...' : 'إنشاء الحساب'}
+                    {isLoading ? (language === 'ar' ? 'جاري التسجيل...' : 'Inscription...') : t('login.register')}
                   </Button>
                 </CardFooter>
               </form>
