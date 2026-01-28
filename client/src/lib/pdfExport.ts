@@ -24,7 +24,8 @@ export const exportToPDF = ({
   endDate,
 }: PDFExportOptions) => {
   try {
-    const doc = new (jsPDF as any)({
+    // Initialize document
+    const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
@@ -34,28 +35,30 @@ export const exportToPDF = ({
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 10;
 
-    // Set font
-    doc.setFont('Arial');
+    // Helper for RTL text (simple reversal for basic Arabic support without complex shaping)
+    const fixRTL = (text: string) => {
+      if (language !== 'ar') return text;
+      // This is a very basic fix for Arabic text in jsPDF which doesn't support RTL natively well
+      return text.split(' ').reverse().join(' ');
+    };
 
     // Title
     const titleText = title || getTranslation(language, 'export.title');
     doc.setFontSize(16);
-    doc.setFont('Arial', 'bold');
-    doc.text(titleText, pageWidth / 2, margin + 10, { align: 'center' });
+    doc.text(fixRTL(titleText), pageWidth / 2, margin + 10, { align: 'center' });
 
     // Organization Info
     doc.setFontSize(10);
-    doc.setFont('Arial', 'normal');
     const org = getTranslation(language, 'footer.organization');
     const dept = getTranslation(language, 'footer.department');
-    doc.text(org, pageWidth / 2, margin + 18, { align: 'center' });
-    doc.text(dept, pageWidth / 2, margin + 24, { align: 'center' });
+    doc.text(fixRTL(org), pageWidth / 2, margin + 18, { align: 'center' });
+    doc.text(fixRTL(dept), pageWidth / 2, margin + 24, { align: 'center' });
 
     // Date Range Info
     if (startDate || endDate) {
       const dateText = `${getTranslation(language, 'export.startDate')}: ${startDate || '-'} | ${getTranslation(language, 'export.endDate')}: ${endDate || '-'}`;
       doc.setFontSize(9);
-      doc.text(dateText, pageWidth / 2, margin + 30, { align: 'center' });
+      doc.text(fixRTL(dateText), pageWidth / 2, margin + 30, { align: 'center' });
     }
 
     // Table Headers
@@ -70,7 +73,7 @@ export const exportToPDF = ({
       getTranslation(language, 'dashboard.oldIdx'),
       getTranslation(language, 'dashboard.currentIdx'),
       getTranslation(language, 'dashboard.destination'),
-    ];
+    ].map(h => fixRTL(h));
 
     // Table Data
     const tableData = records.map((record, index) => [
@@ -83,102 +86,53 @@ export const exportToPDF = ({
       record.loadedQuantity.toString(),
       record.oldIndex.toString(),
       record.currentIndex.toString(),
-      record.destination,
+      fixRTL(record.destination),
     ]);
 
     // Add table using autoTable
-    // Note: In modern jspdf-autotable, it's often available directly on the doc instance
-    const autoTable = (doc as any).autoTable;
-    if (typeof autoTable === 'function') {
-      autoTable.call(doc, {
-        head: [headers],
-        body: tableData,
-        startY: margin + 36,
-        margin: margin,
-        styles: {
-          font: 'Arial',
-          fontSize: 8,
-          cellPadding: 3,
-          halign: 'center',
-          valign: 'middle',
-          overflow: 'linebreak',
-        },
-        headStyles: {
-          fillColor: [25, 118, 210],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'center',
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245],
-        },
-        columnStyles: {
-          0: { cellWidth: 10 },
-          1: { cellWidth: 15 },
-          2: { cellWidth: 14 },
-          3: { cellWidth: 14 },
-          4: { cellWidth: 14 },
-          5: { cellWidth: 12 },
-          6: { cellWidth: 12 },
-          7: { cellWidth: 12 },
-          8: { cellWidth: 12 },
-          9: { cellWidth: 15 },
-        },
-      });
-    } else {
-      // Fallback: use direct method
-      (doc as any).autoTable({
-        head: [headers],
-        body: tableData,
-        startY: margin + 36,
-        margin: margin,
-        styles: {
-          font: 'Arial',
-          fontSize: 8,
-          cellPadding: 3,
-          halign: 'center',
-          valign: 'middle',
-        },
-        headStyles: {
-          fillColor: [25, 118, 210],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245],
-        },
-      });
-    }
+    (doc as any).autoTable({
+      head: [headers],
+      body: tableData,
+      startY: margin + 36,
+      margin: margin,
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        halign: 'center',
+        valign: 'middle',
+      },
+      headStyles: {
+        fillColor: [27, 77, 140], // SNIM Blue
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+    });
 
     // Summary Section
     const totalLoaded = records.reduce((sum, r) => sum + r.loadedQuantity, 0);
     const totalOrdered = records.reduce((sum, r) => sum + r.orderedQuantity, 0);
 
-    const finalY = ((doc as any).lastAutoTable?.finalY || 200) + 10;
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
 
     doc.setFontSize(11);
-    doc.setFont('Arial', 'bold');
-    doc.text(getTranslation(language, 'dashboard.totalLoaded'), margin, finalY);
-    doc.text(totalLoaded.toString(), pageWidth - margin - 20, finalY, { align: 'right' });
-
-    doc.text(getTranslation(language, 'dashboard.totalOrdered'), margin, finalY + 8);
-    doc.text(totalOrdered.toString(), pageWidth - margin - 20, finalY + 8, { align: 'right' });
-
-    doc.text(getTranslation(language, 'dashboard.tankerCount'), margin, finalY + 16);
-    doc.text(records.length.toString(), pageWidth - margin - 20, finalY + 16, { align: 'right' });
+    doc.text(fixRTL(getTranslation(language, 'dashboard.totalLoaded') + ': ' + totalLoaded + ' L'), margin, finalY);
+    doc.text(fixRTL(getTranslation(language, 'dashboard.totalOrdered') + ': ' + totalOrdered + ' L'), margin, finalY + 8);
+    doc.text(fixRTL(getTranslation(language, 'dashboard.tankerCount') + ': ' + records.length), margin, finalY + 16);
 
     // Footer
     doc.setFontSize(8);
-    doc.setFont('Arial', 'normal');
     const responsible = getTranslation(language, 'footer.responsible');
     const name = getTranslation(language, 'footer.name');
-    doc.text(`${responsible}: ${name}`, margin, pageHeight - 10);
+    doc.text(fixRTL(`${responsible}: ${name}`), margin, pageHeight - 10);
 
     const timestamp = new Date().toLocaleString(
       language === 'ar' ? 'ar-SA' : language === 'fr' ? 'fr-FR' : 'en-US'
     );
     doc.text(
-      `${getTranslation(language, 'footer.version')} | ${timestamp}`,
+      fixRTL(`${getTranslation(language, 'footer.version')} | ${timestamp}`),
       pageWidth - margin,
       pageHeight - 10,
       { align: 'right' }
@@ -191,6 +145,8 @@ export const exportToPDF = ({
     return true;
   } catch (error) {
     console.error('PDF Export Error:', error);
+    // Fallback to a simple alert if something goes wrong
+    alert('Error exporting PDF. Please check console for details.');
     throw error;
   }
 };
