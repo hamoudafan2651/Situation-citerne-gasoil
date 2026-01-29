@@ -52,8 +52,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const saveRecords = (newRecords: TankerRecord[]) => {
     setRecords(newRecords);
-    localStorage.setItem('scg_records', JSON.stringify(newRecords));
+    try {
+      localStorage.setItem('scg_records', JSON.stringify(newRecords));
+      // Backup to another key for extra safety
+      localStorage.setItem('scg_records_backup', JSON.stringify(newRecords));
+    } catch (e) {
+      console.error('Failed to save to localStorage:', e);
+    }
   };
+
+  // Sync with localStorage on visibility change (to handle mobile sleep/background)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        localStorage.setItem('scg_records', JSON.stringify(records));
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [records]);
 
   const addRecord = async (recordData: Omit<TankerRecord, 'id' | 'date' | 'createdBy' | 'createdAt'>) => {
     if (!user) return;

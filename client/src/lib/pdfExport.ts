@@ -1,7 +1,14 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import 'jspdf-autotable';
 import { TankerRecord } from '@/contexts/DataContext';
 import { Language, translations } from './translations';
+
+// Extend jsPDF with autotable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: any;
+  }
+}
 
 interface PDFExportOptions {
   records: TankerRecord[];
@@ -12,8 +19,8 @@ interface PDFExportOptions {
 }
 
 const getTranslation = (language: Language, key: string): string => {
-  const trans = translations[language];
-  return (trans as any)[key] || key;
+  const trans = (translations as any)[language];
+  return trans[key] || key;
 };
 
 export const exportToPDF = async ({
@@ -24,130 +31,138 @@ export const exportToPDF = async ({
   endDate,
 }: PDFExportOptions) => {
   try {
-    // Create a temporary container for the report
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '1100px'; // Landscape width
-    container.style.padding = '40px';
-    container.style.backgroundColor = '#ffffff';
-    container.style.color = '#000000';
-    container.style.fontFamily = 'Arial, sans-serif';
-    container.dir = language === 'ar' ? 'rtl' : 'ltr';
-
-    // Header Section
-    const headerHtml = `
-      <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1b4d8c; padding-bottom: 20px;">
-        <h1 style="font-size: 28px; color: #1b4d8c; margin: 0; text-transform: uppercase;">${title || getTranslation(language, 'export.title')}</h1>
-        <p style="font-size: 14px; color: #666; margin: 5px 0;">${getTranslation(language, 'footer.organization')} | ${getTranslation(language, 'footer.department')}</p>
-        <p style="font-size: 12px; color: #888; margin: 5px 0;">${getTranslation(language, 'export.startDate')}: ${startDate || '-'} | ${getTranslation(language, 'export.endDate')}: ${endDate || '-'}</p>
-      </div>
-    `;
-
-    // Table Section
-    let tableRows = '';
-    records.forEach((record, index) => {
-      tableRows += `
-        <tr style="border-bottom: 1px solid #eee;">
-          <td style="padding: 10px; text-align: center;">${index + 1}</td>
-          <td style="padding: 10px; text-align: center; font-weight: bold;">${record.tankerNumber}</td>
-          <td style="padding: 10px; text-align: center;">${record.entryTime}</td>
-          <td style="padding: 10px; text-align: center;">${record.exitTime || '-'}</td>
-          <td style="padding: 10px; text-align: center;">${record.bcNumber}</td>
-          <td style="padding: 10px; text-align: center;">${record.orderedQuantity}</td>
-          <td style="padding: 10px; text-align: center;">${record.loadedQuantity}</td>
-          <td style="padding: 10px; text-align: center;">${record.oldIndex}</td>
-          <td style="padding: 10px; text-align: center;">${record.currentIndex}</td>
-          <td style="padding: 10px; text-align: ${language === 'ar' ? 'right' : 'left'};">${record.destination}</td>
-        </tr>
-      `;
-    });
-
-    const tableHtml = `
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 12px;">
-        <thead>
-          <tr style="background-color: #1b4d8c; color: #ffffff;">
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.serialNum')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.tankerNum')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.entry')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.exit')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.bcNum')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.ordered')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.loaded')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.oldIdx')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.currentIdx')}</th>
-            <th style="padding: 12px; border: 1px solid #1b4d8c;">${getTranslation(language, 'dashboard.destination')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tableRows}
-        </tbody>
-      </table>
-    `;
-
-    // Summary Section
-    const totalLoaded = records.reduce((sum, r) => sum + r.loadedQuantity, 0);
-    const totalOrdered = records.reduce((sum, r) => sum + r.orderedQuantity, 0);
-    
-    const summaryHtml = `
-      <div style="display: flex; justify-content: space-between; margin-bottom: 40px; background-color: #f8f9fa; padding: 20px; border: 1px solid #eee;">
-        <div>
-          <p style="margin: 5px 0; font-weight: bold;">${getTranslation(language, 'dashboard.totalLoaded')}: <span style="color: #1b4d8c;">${totalLoaded.toLocaleString()} L</span></p>
-          <p style="margin: 5px 0; font-weight: bold;">${getTranslation(language, 'dashboard.totalOrdered')}: <span style="color: #1b4d8c;">${totalOrdered.toLocaleString()} L</span></p>
-          <p style="margin: 5px 0; font-weight: bold;">${getTranslation(language, 'dashboard.tankerCount')}: <span style="color: #1b4d8c;">${records.length}</span></p>
-        </div>
-        <div style="text-align: ${language === 'ar' ? 'left' : 'right'};">
-          <p style="margin: 5px 0; font-size: 12px; color: #666;">${getTranslation(language, 'footer.responsible')}</p>
-          <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${getTranslation(language, 'footer.name')}</p>
-        </div>
-      </div>
-    `;
-
-    // Footer Section
-    const timestamp = new Date().toLocaleString(language === 'ar' ? 'ar-SA' : language === 'fr' ? 'fr-FR' : 'en-US');
-    const footerHtml = `
-      <div style="display: flex; justify-content: space-between; font-size: 10px; color: #999; border-top: 1px solid #eee; pt: 10px;">
-        <span>${getTranslation(language, 'footer.version')}</span>
-        <span>${timestamp}</span>
-        <span>${getTranslation(language, 'footer.rights')}</span>
-      </div>
-    `;
-
-    container.innerHTML = headerHtml + tableHtml + summaryHtml + footerHtml;
-    document.body.appendChild(container);
-
-    // Use html2canvas to capture the container
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff'
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
+    // Create PDF in landscape mode
+    const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4'
     });
 
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    const isRtl = language === 'ar';
+    const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Save PDF with precise date and time
+    // Set Font - Using a standard font that supports basic Latin/French
+    // Note: For full Arabic support in jsPDF, a custom font (TTF) must be embedded.
+    // Since we are in a browser environment, we'll use standard fonts and 
+    // focus on structure. For production Arabic, the user should add a .ttf font.
+    doc.setFont("helvetica");
+
+    // Header
+    doc.setTextColor(27, 77, 140); // #1b4d8c
+    doc.setFontSize(22);
+    const headerTitle = title || getTranslation(language, 'export.title');
+    doc.text(headerTitle, pageWidth / 2, 20, { align: 'center' });
+
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    const subHeader = `${getTranslation(language, 'footer.organization')} | ${getTranslation(language, 'footer.department')}`;
+    doc.text(subHeader, pageWidth / 2, 28, { align: 'center' });
+
+    doc.setFontSize(10);
+    const dateRange = `${getTranslation(language, 'export.startDate')}: ${startDate || '-'} | ${getTranslation(language, 'export.endDate')}: ${endDate || '-'}`;
+    doc.text(dateRange, pageWidth / 2, 35, { align: 'center' });
+
+    // Draw a line
+    doc.setDrawColor(27, 77, 140);
+    doc.setLineWidth(0.5);
+    doc.line(20, 40, pageWidth - 20, 40);
+
+    // Table Columns
+    const columns = [
+      { header: getTranslation(language, 'dashboard.serialNum'), dataKey: 'index' },
+      { header: getTranslation(language, 'dashboard.tankerNum'), dataKey: 'tankerNumber' },
+      { header: getTranslation(language, 'dashboard.entry'), dataKey: 'entryTime' },
+      { header: getTranslation(language, 'dashboard.exit'), dataKey: 'exitTime' },
+      { header: getTranslation(language, 'dashboard.bcNum'), dataKey: 'bcNumber' },
+      { header: getTranslation(language, 'dashboard.ordered'), dataKey: 'orderedQuantity' },
+      { header: getTranslation(language, 'dashboard.loaded'), dataKey: 'loadedQuantity' },
+      { header: getTranslation(language, 'dashboard.oldIdx'), dataKey: 'oldIndex' },
+      { header: getTranslation(language, 'dashboard.currentIdx'), dataKey: 'currentIndex' },
+      { header: getTranslation(language, 'dashboard.destination'), dataKey: 'destination' },
+    ];
+
+    // Reverse columns for RTL
+    const finalColumns = isRtl ? [...columns].reverse() : columns;
+
+    // Table Data
+    const tableData = records.map((record, idx) => {
+      const row: any = {
+        index: idx + 1,
+        tankerNumber: record.tankerNumber,
+        entryTime: record.entryTime,
+        exitTime: record.exitTime || '-',
+        bcNumber: record.bcNumber,
+        orderedQuantity: record.orderedQuantity.toLocaleString(),
+        loadedQuantity: record.loadedQuantity.toLocaleString(),
+        oldIndex: record.oldIndex.toLocaleString(),
+        currentIndex: record.currentIndex.toLocaleString(),
+        destination: record.destination,
+      };
+      return isRtl ? Object.values(row).reverse() : Object.values(row);
+    });
+
+    // Generate Table
+    doc.autoTable({
+      startY: 45,
+      head: [finalColumns.map(col => col.header)],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [27, 77, 140],
+        textColor: [255, 255, 255],
+        fontSize: 10,
+        halign: 'center'
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        halign: isRtl ? 'right' : 'left',
+        font: "helvetica" // Standard font
+      },
+      columnStyles: {
+        0: { halign: 'center' }
+      }
+    });
+
+    // Summary Section
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const totalLoaded = records.reduce((sum, r) => sum + r.loadedQuantity, 0);
+    const totalOrdered = records.reduce((sum, r) => sum + r.orderedQuantity, 0);
+
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "bold");
+    
+    const summaryX = isRtl ? pageWidth - 20 : 20;
+    const summaryAlign = isRtl ? 'right' : 'left';
+
+    doc.text(`${getTranslation(language, 'dashboard.totalLoaded')}: ${totalLoaded.toLocaleString()} L`, summaryX, finalY, { align: summaryAlign });
+    doc.text(`${getTranslation(language, 'dashboard.totalOrdered')}: ${totalOrdered.toLocaleString()} L`, summaryX, finalY + 7, { align: summaryAlign });
+    doc.text(`${getTranslation(language, 'dashboard.tankerCount')}: ${records.length}`, summaryX, finalY + 14, { align: summaryAlign });
+
+    // Signature
+    const sigX = isRtl ? 20 : pageWidth - 20;
+    const sigAlign = isRtl ? 'left' : 'right';
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(getTranslation(language, 'footer.responsible'), sigX, finalY, { align: sigAlign });
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text(getTranslation(language, 'footer.name'), sigX, finalY + 7, { align: sigAlign });
+
+    // Footer
+    const timestamp = new Date().toLocaleString();
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`${getTranslation(language, 'footer.version')} | ${timestamp}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+
+    // Save
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.getHours().toString().padStart(2, '0') + '-' + now.getMinutes().toString().padStart(2, '0');
-    const fileName = `situation_citerne_${dateStr}_${timeStr}_${language}.pdf`;
-    
-    pdf.save(fileName);
+    const fileName = `situation_citerne_${dateStr}_${language}.pdf`;
+    doc.save(fileName);
 
-    // Cleanup
-    document.body.removeChild(container);
     return true;
   } catch (error) {
     console.error('PDF Export Error:', error);
