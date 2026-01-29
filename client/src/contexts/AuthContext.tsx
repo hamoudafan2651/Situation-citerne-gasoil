@@ -36,14 +36,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load users and current session from localStorage on mount
   useEffect(() => {
-    const storedUsers = localStorage.getItem('scg_users_list');
-    if (storedUsers) {
-      setUsers(JSON.parse(storedUsers));
-    }
+    try {
+      const storedUsers = localStorage.getItem('scg_users_list');
+      if (storedUsers) {
+        setUsers(JSON.parse(storedUsers));
+      }
 
-    const storedSession = localStorage.getItem('scg_current_user');
-    if (storedSession) {
-      setUser(JSON.parse(storedSession));
+      const storedSession = localStorage.getItem('scg_current_user');
+      if (storedSession) {
+        const parsedUser = JSON.parse(storedSession);
+        // Basic validation of stored user
+        if (parsedUser && parsedUser.id && parsedUser.jobCardNumber) {
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('scg_current_user');
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load session:', e);
+      localStorage.removeItem('scg_current_user');
     }
   }, []);
 
