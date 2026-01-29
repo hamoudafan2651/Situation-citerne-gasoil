@@ -1,13 +1,13 @@
 services:
-  - type: static
+  - type: web
     name: situation-citerne-gasoil
-    env: static
-    buildCommand: pnpm install && pnpm build
-    staticPublishPath: ./dist/public
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: public, max-age=3600
-    routes:
-      - path: /*
-        destination: /index.html
+    env: node
+    plan: free
+    buildCommand: pnpm install && pnpm build:full
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    healthCheckPath: /health

@@ -10,23 +10,44 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Serve static files from dist/public in production
-  const staticPath =
-    process.env.NODE_ENV === "production"
-      ? path.resolve(__dirname, "public")
-      : path.resolve(__dirname, "..", "dist", "public");
+  // In production, the server is at dist/index.js and static files are at dist/public
+  // In local dev/build, we might be running from different locations
+  const publicPath = path.resolve(__dirname, "public");
+  
+  console.log(`Serving static files from: ${publicPath}`);
 
-  app.use(express.static(staticPath));
+  // Middleware
+  app.use(express.json());
+  
+  // Serve static files with proper caching for PWA
+  app.use(express.static(publicPath, {
+    maxAge: '1h',
+    setHeaders: (res, path) => {
+      if (path.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      } else if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|svg)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+      }
+    }
+  }));
 
-  // Handle client-side routing - serve index.html for all routes
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
+  // Health check endpoint
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "ok" });
+  });
+
+  // Handle client-side routing - serve index.html for all non-API routes
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(publicPath, "index.html"));
   });
 
   const port = process.env.PORT || 3000;
 
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on port ${port}`);
   });
 }
 
