@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DigitalClock } from '@/components/DigitalClock';
@@ -7,7 +7,8 @@ import { DataDashboard } from '@/components/DataDashboard';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { AdvancedExportDialog } from '@/components/AdvancedExportDialog';
 import { Button } from '@/components/ui/button';
-import { LogOut, User as UserIcon, Truck, Fuel, ShieldCheck, Download } from 'lucide-react';
+import { LogOut, User as UserIcon, Truck, Fuel, ShieldCheck, Download, PlusCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,41 @@ export default function Home() {
   const { user, logout } = useAuth();
   const { t } = useLanguage();
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+      // Update UI notify the user they can add to home screen
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    // Show the prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    } else {
+      console.log('User dismissed the install prompt');
+    }
+    // We've used the prompt, and can't use it again, throw it away
+    setDeferredPrompt(null);
+    setShowInstallBtn(false);
+  };
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -54,6 +90,17 @@ export default function Home() {
               <DigitalClock />
             </div>
             
+            {showInstallBtn && (
+              <Button 
+                onClick={handleInstallClick}
+                variant="outline" 
+                className="hidden sm:flex items-center gap-2 border-2 border-primary text-primary font-bold animate-pulse"
+              >
+                <PlusCircle className="w-4 h-4" />
+                {t('lang.arabic') === 'العربية' ? 'تثبيت التطبيق' : 'Install App'}
+              </Button>
+            )}
+
             <LanguageSwitcher />
             
             <DropdownMenu>

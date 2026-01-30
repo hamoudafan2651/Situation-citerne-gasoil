@@ -17,16 +17,22 @@ async function startServer() {
 
   // Special handling for PWA files to ensure correct MIME types and no-cache
   app.get("/sw.js", (_req, res) => {
-    res.setHeader("Content-Type", "application/javascript");
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Content-Type", "application/javascript");
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.sendFile(path.join(publicPath, "sw.js"));
   });
 
   app.get("/manifest.json", (_req, res) => {
-    res.setHeader("Content-Type", "application/manifest+json");
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Content-Type", "application/manifest+json");
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.sendFile(path.join(publicPath, "manifest.json"));
   });
+
+  // Serve static images with long cache
+  app.use("/images", express.static(path.join(publicPath, "images"), {
+    maxAge: '365d',
+    immutable: true
+  }));
 
   // Serve other static files
   app.use(express.static(publicPath, {
