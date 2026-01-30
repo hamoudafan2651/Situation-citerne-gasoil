@@ -1,11 +1,12 @@
 {
   "name": "Situations gasoil",
-  "short_name": "Situations gasoil",
+  "short_name": "Gasoil",
   "description": "نظام تنظيم صهاريج الوقود - TQ14 DIRECTION GENERALE",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1b4d8c",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/images/snim-logo.jpg",
@@ -33,5 +34,6 @@
     }
   ],
   "prefer_related_applications": false,
-  "orientation": "any"
+  "orientation": "any",
+  "scope": "/"
 }

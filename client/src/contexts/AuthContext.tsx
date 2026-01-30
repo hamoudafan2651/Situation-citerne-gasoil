@@ -36,26 +36,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load users and current session from localStorage on mount
   useEffect(() => {
-    try {
-      const storedUsers = localStorage.getItem('scg_users_list');
-      if (storedUsers) {
-        setUsers(JSON.parse(storedUsers));
-      }
-
-      const storedSession = localStorage.getItem('scg_current_user');
-      if (storedSession) {
-        const parsedUser = JSON.parse(storedSession);
-        // Basic validation of stored user
-        if (parsedUser && parsedUser.id && parsedUser.jobCardNumber) {
-          setUser(parsedUser);
-        } else {
-          localStorage.removeItem('scg_current_user');
+    const initAuth = () => {
+      try {
+        const storedUsers = localStorage.getItem('scg_users_list');
+        if (storedUsers) {
+          setUsers(JSON.parse(storedUsers));
         }
+
+        const storedSession = localStorage.getItem('scg_current_user');
+        if (storedSession) {
+          const parsedUser = JSON.parse(storedSession);
+          if (parsedUser && parsedUser.id && parsedUser.jobCardNumber) {
+            setUser(parsedUser);
+            console.log('Session restored for:', parsedUser.name);
+          }
+        }
+      } catch (e) {
+        console.error('Auth initialization error:', e);
       }
-    } catch (e) {
-      console.error('Failed to load session:', e);
-      localStorage.removeItem('scg_current_user');
-    }
+    };
+    initAuth();
   }, []);
 
   const login = async (jobCardNumber: string, passcode: string): Promise<boolean> => {
